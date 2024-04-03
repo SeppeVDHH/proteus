@@ -134,6 +134,7 @@ trait IntAluService {
   def resultData: PipelineData[UInt]
 }
 
+
 object LsuOperationType extends SpinalEnum {
   val NONE, LOAD, STORE = newElement()
 }
@@ -441,4 +442,8 @@ trait FormalService {
 
 trait Resettable {
   def pipelineReset(): Unit
+}
+
+trait FenceService {
+  def isFence(stage: Stage): Bool
 }

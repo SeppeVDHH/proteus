@@ -51,15 +51,17 @@ class ReorderBuffer(
     with Resettable {
   def capacity: Int = robCapacity
   def indexBits: BitCount = log2Up(capacity) bits
-
+  
   val robEntries = Vec.fill(capacity)(RegInit(RobEntry(retirementRegisters).getZero))
   val oldestIndex = Counter(capacity)
   val newestIndex = Counter(capacity)
   private val isFullNext = Bool()
   private val isFull = RegNext(isFullNext).init(False)
   private val willRetire = False
-  val isAvailable = !isFull || willRetire
+  private val fenceDetectedNext = Bool()
+  private val fenceDetected = RegNext(fenceDetectedNext).init(False)
 
+  val isAvailable = !isFull || willRetire || !fenceDetected
   val pushInCycle = Bool()
   pushInCycle := False
   val pushedEntry = RobEntry(retirementRegisters)
@@ -122,7 +124,7 @@ class ReorderBuffer(
 
   def pushEntry(): (UInt, EntryMetadata) = {
     val issueStage = pipeline.issuePipeline.stages.last
-
+    
     pushInCycle := True
     pushedEntry.rdbUpdated := False
     pushedEntry.cdbUpdated := False
@@ -242,6 +244,7 @@ class ReorderBuffer(
 
   def build(): Unit = {
     isFullNext := isFull
+    fenceDetectedNext := fenceDetected
     val oldestEntry = robEntries(oldestIndex.value)
     val updatedOldestIndex = UInt(indexBits)
     updatedOldestIndex := oldestIndex.value
@@ -284,6 +287,19 @@ class ReorderBuffer(
       when(updatedOldestIndex === updatedNewest) {
         isFullNext := True
       }
+    }
+
+
+    when(pipeline.service[FenceService].isFence(pipeline.passThroughStage)){
+      fenceDetectedNext := True
+      isFullNext := True
+      isAvailable := False
+    }
+
+    when(pipeline.service[FenceService].isFence(pipeline.retirementStage) && fenceDetected){
+      fenceDetectedNext := False
+      isFullNext := False
+      isAvailable := True
     }
   }
 

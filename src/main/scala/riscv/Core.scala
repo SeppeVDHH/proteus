@@ -66,6 +66,7 @@ object createStaticPipeline {
         new TrapStageInvalidator,
         new Interrupts(pipeline.writeback),
         new MulDiv(Set(pipeline.execute))
+        //new Fence()
       ) ++ extraPlugins
     )
 
@@ -261,7 +262,8 @@ object createDynamicPipeline {
         new TrapHandler(pipeline.retirementStage),
         new MachineMode(pipeline.intAlu1),
         new Interrupts(pipeline.retirementStage),
-        new Timers
+        new Timers,
+        new Fence
       ) ++ extraPlugins
     )
 

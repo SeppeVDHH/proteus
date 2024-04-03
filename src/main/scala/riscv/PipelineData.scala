@@ -8,6 +8,7 @@ class PipelineData[T <: Data](val dataType: HardType[T]) {
   override def toString: String = name
 }
 
+
 class StandardPipelineData(config: Config) {
   private val xlen = config.xlen
 
