@@ -61,7 +61,7 @@ class ReorderBuffer(
   private val fenceDetectedNext = Bool()
   private val fenceDetected = RegNext(fenceDetectedNext).init(False)
 
-  val isAvailable = !isFull || willRetire || !fenceDetected
+  val isAvailable = (!isFull || willRetire) && !fenceDetected
   val pushInCycle = Bool()
   pushInCycle := False
   val pushedEntry = RobEntry(retirementRegisters)
@@ -292,14 +292,10 @@ class ReorderBuffer(
 
     when(pipeline.service[FenceService].isFence(pipeline.passThroughStage)){
       fenceDetectedNext := True
-      isFullNext := True
-      isAvailable := False
     }
 
     when(pipeline.service[FenceService].isFence(pipeline.retirementStage) && fenceDetected){
       fenceDetectedNext := False
-      isFullNext := False
-      isAvailable := True
     }
   }
 
