@@ -290,7 +290,7 @@ class ReorderBuffer(
     }
 
 
-    when(pipeline.service[FenceService].isFence(pipeline.passThroughStage)){
+    when(pipeline.service[FenceService].isFence(pipeline.issuePipeline.stages.last)){
       fenceDetectedNext := True
     }
 
