@@ -20,7 +20,6 @@ def evaluate():
 
 
 base_proteus = sys.argv[1]
-secure_proteus = sys.argv[2]
 
 test_cases = [
     "secret-before-branch",
@@ -29,13 +28,6 @@ test_cases = [
 
 for case in test_cases:
     print(f"TEST {case}:")
-    # run test case with secure variant
-    subprocess.call(
-        ["make", f"{case}.bin"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.call([f"{secure_proteus}", f"{case}.bin"])
-    print("SECURE VARIANT:  ", end='\t')
-    print("🗲 Secret leaked!" if evaluate() else "✔ Secret did not leak!")
-
     # run test case with insecure variant:
     # 1. remove csrrw instructions from code
     with open(f"{case}.s") as source:
@@ -45,9 +37,8 @@ for case in test_cases:
         with open(f"{case}_stripped.s", 'w') as stripped_file:
             stripped_file.writelines(stripped)
 
-    subprocess.call(["make", f"{case}_stripped.bin"],
-                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.call([f"{secure_proteus}", f"{case}_stripped.bin"])
+    subprocess.call(["make", f"{case}_stripped.bin"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.call([f"{base_proteus}", f"{case}_stripped.bin"])
     print("INSECURE VARIANT:", end='\t')
     print("🗲 Secret leaked!" if evaluate() else "✔ Secret did not leak!")
     print()
