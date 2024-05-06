@@ -71,6 +71,7 @@ class ReorderBuffer(
     oldestIndex.clear()
     newestIndex.clear()
     isFull := False
+    fenceDetected := False
   }
 
   private def byte2WordAddress(address: UInt) = {

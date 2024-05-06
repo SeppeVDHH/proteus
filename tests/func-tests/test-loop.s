@@ -23,13 +23,12 @@ loop:
     
     fence
     
-    # Multiply the accumulator by 2 (shift left)
-    mul a3, a3, a1          # Multiply a3 (accumulator) by a1 (base number)
+    mul a3, a3, a1      
     
     fence
     
     # Increment counter and continue loop
-    addi a4, a4, 1          # Increment counter
+    addi a4, a4, 1         
     
     fence
     

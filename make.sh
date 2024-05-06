@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # Execute the make command with specified options
-make -C sim CORE=riscv.CoreDynamicExtMem
+make -C tests CORE=riscv.CoreDynamicExtMem RISCV_PREFIX=riscv32-unknown-elf

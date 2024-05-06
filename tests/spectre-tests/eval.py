@@ -26,6 +26,8 @@ test_cases = [
     "secret-after-branch",
 ]
 
+#Tests for the security of the fence instruction
+print("Security tests")
 for case in test_cases:
     print(f"TEST {case}:")
 
