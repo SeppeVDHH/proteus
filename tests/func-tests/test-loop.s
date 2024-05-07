@@ -35,21 +35,26 @@ loop:
     jal loop
 
 end_loop:
+    fence
     li a6, 256
     
+    fence
     sub a5, a6, a3
+    
+    fence
     
     beqz a5, correct
     
 finish:
-    fence
     lui ra,0x10000
+    fence
     li sp,4
     sb sp,0(ra)
     
 correct:
     la a6, secret
     lw a6, (a6)
+    fence 
     lw zero, (a6)
     fence
     jal finish

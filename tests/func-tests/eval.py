@@ -23,7 +23,8 @@ base_proteus = sys.argv[1]
 
 test_cases = [
     "test-add",
-    "test-loop"
+    "test-loop",
+    "test-fib"
 ]
 
 #Tests for the functionality of the fence instruction
