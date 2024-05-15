@@ -295,7 +295,7 @@ class ReorderBuffer(
       fenceDetectedNext := True
     }
 
-    when(pipeline.service[FenceService].isFence(pipeline.retirementStage) && fenceDetected){
+    when(pipeline.service[FenceService].isFence(pipeline.retirementStage)){
       fenceDetectedNext := False
     }
   }

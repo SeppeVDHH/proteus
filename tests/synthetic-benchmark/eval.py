@@ -77,7 +77,12 @@ with open("benchmark_logs.txt", 'w') as logfile:
         # proc['process'].wait()
         logfile.write(
             f"Benchmark with mode = {proc['mode']} and config = {proc['config']}:\n")
+        print(f"Benchmark with mode = {proc['mode']} and config = {proc['config']}:\n")
+
         logfile.write(f"{'-' * 80}\n")
+
+        print(f"{'-' * 80}\n")
+
         for line in iter(proc['process'].stdout.readline, ''):
             logfile.write(line)
             match = re.match(r"total time\s*:\[(\d+)\]", line)

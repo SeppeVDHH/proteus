@@ -30,6 +30,7 @@ condition:
 	lw t0, (t0)
 	lw t0, (t0)
 	
+	
 	beqz t0, finish
 
 	# ----- BEGIN TRANSIENT BLOCK -----
@@ -37,11 +38,14 @@ condition:
 	# t6 = *secret;
 	# leak(t6);
 	
-	fence
+	
 	
 	la t6, secret
+	
 	lw t6, (t6)
+	fence
 	lw zero, (t6)
+	
 
 	# ----- END TRANSIENT BLOCK -----
 

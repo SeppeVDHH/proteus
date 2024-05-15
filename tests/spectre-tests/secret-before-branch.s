@@ -34,14 +34,14 @@ condition:
 	lw t0, (t0)
 	
 	
-	
+	fence
 	beqz t0, finish
 
 	# ----- BEGIN TRANSIENT BLOCK -----
 
 	# leak(s0);.
 	
-	fence
+	
 	
 	lw t6, (s0)
 	

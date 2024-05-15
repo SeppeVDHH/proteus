@@ -167,9 +167,9 @@ static inline void set_byte(struct bounded_array *ba, unsigned int offset, char 
 //access functions with fence
 static inline char get_byte_fence(struct bounded_array *ba, unsigned int offset)
 {
-    __asm__ __volatile__("fence");
     if (offset < ba->length)
     {
+        __asm__ __volatile__("fence");
         return ba->data[offset];
     }
 
@@ -178,9 +178,10 @@ static inline char get_byte_fence(struct bounded_array *ba, unsigned int offset)
 
 static inline int get_int_fence(struct bounded_array *ba, unsigned int offset)
 {
-    __asm__ __volatile__("fence");
+    
     if (offset < ba->length)
     {
+        __asm__ __volatile__("fence");
         return ((int *)(ba->data))[offset];
     }
 
@@ -189,9 +190,10 @@ static inline int get_int_fence(struct bounded_array *ba, unsigned int offset)
 
 static inline void set_byte_fence(struct bounded_array *ba, unsigned int offset, char value)
 {
-    __asm__ __volatile__("fence");
+    
     if (offset < ba->length)
     {
+        __asm__ __volatile__("fence");
         ba->data[offset] = value;
     }
 }
@@ -220,6 +222,8 @@ void base_test() {
     int i, j, k;
     unsigned int index;
     int work_loop, crypto_loop;
+
+    printf("Base test\n");
 
     __attribute__((section("secret"))) static char cipher_buf[4096];
 
@@ -309,6 +313,8 @@ void fence_test() {
     unsigned int index;
     int work_loop, crypto_loop;
 
+    printf("Fence test\n");
+
     __attribute__((section("secret"))) static char cipher_buf[4096];
 
     if (!strcmp(input, "75"))
@@ -396,13 +402,15 @@ int main(int argc, char **argv)
 {
     printf("Mode: %d, input: %s\n", mode, input);
 
-    // set up secret region  boundaries in CSRs
+    // switch between different modes, different mode means different tests
     switch (mode)
     {
     case 0: // baseline
         base_test();
+        break;
     case 1: // with fence
         fence_test();
+        break;
     }
 
     return 0;
