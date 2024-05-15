@@ -29,13 +29,11 @@ def run_simulation(binary, mode, config):
 
 
 base_proteus = sys.argv[1]
-secure_proteus = sys.argv[2]
 
 
 MODES = [
-    ("0", base_proteus,   "baseline"),  # baseline
-    ("1", secure_proteus, "  p(key)"),  # precise boundaries
-    ("2", secure_proteus, "  p(all)"),  # all secrets
+    ("0", base_proteus, "baseline"),  # baseline
+    ("1", base_proteus, "FENCE"),  # FENCE present
 ]
 
 results = {
@@ -46,12 +44,6 @@ results = {
         '10': 0,
     },
     '1': {
-        '75': 0,
-        '50': 0,
-        '25': 0,
-        '10': 0,
-    },
-    '2': {
         '75': 0,
         '50': 0,
         '25': 0,

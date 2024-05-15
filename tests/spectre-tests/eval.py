@@ -24,6 +24,7 @@ base_proteus = sys.argv[1]
 test_cases = [
     "secret-before-branch",
     "secret-after-branch",
+    "spectre1"
 ]
 
 #Tests for the security of the fence instruction

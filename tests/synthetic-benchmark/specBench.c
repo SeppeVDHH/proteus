@@ -163,6 +163,39 @@ static inline void set_byte(struct bounded_array *ba, unsigned int offset, char 
     }
 }
 
+
+//access functions with fence
+static inline char get_byte_fence(struct bounded_array *ba, unsigned int offset)
+{
+    __asm__ __volatile__("fence");
+    if (offset < ba->length)
+    {
+        return ba->data[offset];
+    }
+
+    return 0;
+}
+
+static inline int get_int_fence(struct bounded_array *ba, unsigned int offset)
+{
+    __asm__ __volatile__("fence");
+    if (offset < ba->length)
+    {
+        return ((int *)(ba->data))[offset];
+    }
+
+    return 0;
+}
+
+static inline void set_byte_fence(struct bounded_array *ba, unsigned int offset, char value)
+{
+    __asm__ __volatile__("fence");
+    if (offset < ba->length)
+    {
+        ba->data[offset] = value;
+    }
+}
+
 /*  The value of the secret key stored in the binary. We do not suggest
     storing secrets in binaries, this is just used to show how to mark
     data as non-speculative through the Linux loader. I.E. This data
@@ -179,42 +212,14 @@ extern char *__stop_secret;
 
 #define mode 0
 #define input "75"
+#define OUTER_LOOP 100
 
-int main(int argc, char **argv)
-{
+void base_test() {
     register uint64_t time1, time2, time_work, time_encrypt;
     // unsigned int junk;
     int i, j, k;
     unsigned int index;
     int work_loop, crypto_loop;
-
-    printf("Mode: %d, input: %s\n", mode, input);
-
-    // set up secret region  boundaries in CSRs
-    switch (mode)
-    {
-    case 0: // baseline
-        break;
-    case 1: // precise boundaries
-        __asm__ __volatile__(
-            "csrrw zero, 0x707, %0\n\t"
-            "csrrw zero, 0x708, %1\n\t"
-            :
-            : "r"(&__start_secret), "r"(&__stop_secret)
-            : "t0");
-        break;
-    case 2: // all secrets
-        uint32_t bottom = 0;
-        uint32_t top = 0xFFFFFFFF;
-
-        __asm__ __volatile__(
-            "csrrw zero, 0x707, %0\n\t"
-            "csrrw zero, 0x708, %1\n\t"
-            :
-            : "r"(bottom), "r"(top)
-            : "t0");
-        break;
-    }
 
     __attribute__((section("secret"))) static char cipher_buf[4096];
 
@@ -265,7 +270,7 @@ int main(int argc, char **argv)
     time_work = 0;
     time_encrypt = 0;
 
-    for (k = 0; k < 100; k++)
+    for (k = 0; k < OUTER_LOOP; k++) //NEEDS TO BE 100
     {
         printf("%d\n", k);
         time1 = rdcycle();
@@ -295,6 +300,110 @@ int main(int argc, char **argv)
     printf("work time   :[%llu]\n", time_work);
     printf("encrypt time:[%llu]\n", time_encrypt);
     printf("total time  :[%llu]\n", time_work + time_encrypt);
+}
+
+void fence_test() {
+    register uint64_t time1, time2, time_work, time_encrypt;
+    // unsigned int junk;
+    int i, j, k;
+    unsigned int index;
+    int work_loop, crypto_loop;
+
+    __attribute__((section("secret"))) static char cipher_buf[4096];
+
+    if (!strcmp(input, "75"))
+    {
+        printf("25s/75c\n");
+        work_loop = 2048;
+        crypto_loop = 100;
+    }
+    else if (!strcmp(input, "50"))
+    {
+        printf("50s/50c\n");
+        work_loop = 8192;
+        crypto_loop = 100;
+    }
+    else if (!strcmp(input, "25"))
+    {
+        printf("75s/25c\n");
+        work_loop = 8192;
+        crypto_loop = 40;
+    }
+    else if (!strcmp(input, "10"))
+    {
+        printf("90s/10c\n");
+        work_loop = 8192;
+        crypto_loop = 15;
+    }
+    else
+    {
+        printf("Invalid setup!\n");
+        // return 1;
+        work_loop = 1;
+        crypto_loop = 1;
+    }
+
+    // ensure all involved data is not going to page fault.
+    for (i = 0; i < 1600; i++)
+    {
+        plain_in.data[i] = plain_text_orig.data[i];
+    }
+    for (i = 0; i < 1024; i++)
+    {
+        plain_in.data[i] = random_dat.data[i * 4];
+    }
+    memset(plain_in_data, 0, 8192);
+    memset(cipher_buf, 0, 4096);
+
+    time_work = 0;
+    time_encrypt = 0;
+
+    for (k = 0; k < OUTER_LOOP; k++) //NEEDS TO BE 100
+    {
+        printf("%d\n", k);
+        time1 = rdcycle();
+        for (j = 0; j < work_loop; j++)
+        {
+            // do Work section
+            // Speculative load based on speculative load is difficult
+            // for Spectre defenses to mitigate without performance loss
+            index = get_int_fence(&random_dat, j % 1024);
+            set_byte_fence(&plain_in, j, get_byte_fence(&plain_text_orig, index));
+        }
+        time2 = rdcycle() - time1;
+        time_work += time2;
+
+        time1 = rdcycle();
+        for (i = 0; i < crypto_loop; i++)
+        {
+            // do Encrypt section
+            Hacl_Chacha20_chacha20_encrypt((uint32_t)MESSAGE_LEN, (unsigned char *)(cipher_buf + (i * 16)), (unsigned char *)(plain_in_data + (i * 16)),
+                                           key, nonce, (uint32_t)0U);
+        }
+        time2 = rdcycle() - time1;
+        time_encrypt += time2;
+    }
+
+    // print the final execution times
+    printf("work time   :[%llu]\n", time_work);
+    printf("encrypt time:[%llu]\n", time_encrypt);
+    printf("total time  :[%llu]\n", time_work + time_encrypt);
+}
+
+
+
+int main(int argc, char **argv)
+{
+    printf("Mode: %d, input: %s\n", mode, input);
+
+    // set up secret region  boundaries in CSRs
+    switch (mode)
+    {
+    case 0: // baseline
+        base_test();
+    case 1: // with fence
+        fence_test();
+    }
 
     return 0;
 }

@@ -20,10 +20,6 @@ setup:
 	la t0, secret
 	
 	addi t0, t0, 4
-
-	
-	nop
-	nop
 	
 	# s0 = *secret  // load secret architecturally
 	lw s0, secret
@@ -37,7 +33,7 @@ condition:
 	lw t0, (t0)
 	lw t0, (t0)
 	
-	fence
+	
 	
 	beqz t0, finish
 
@@ -45,7 +41,9 @@ condition:
 
 	# leak(s0);.
 	
-	lw zero, (s0)
+	fence
+	
+	lw t6, (s0)
 	
 	# ----- END TRANSIENT BLOCK -----
 
