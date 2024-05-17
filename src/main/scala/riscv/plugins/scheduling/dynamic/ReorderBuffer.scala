@@ -291,11 +291,11 @@ class ReorderBuffer(
     }
 
 
-    when(pipeline.service[FenceService].isFence(pipeline.issuePipeline.stages.last)){
+    when(pipeline.service[FenceService].isFenceOut(pipeline.issuePipeline.stages.last)){
       fenceDetectedNext := True
     }
 
-    when(pipeline.service[FenceService].isFence(pipeline.retirementStage)){
+    when(pipeline.service[FenceService].isFenceIn(pipeline.retirementStage)){
       fenceDetectedNext := False
     }
   }

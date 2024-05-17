@@ -47,7 +47,11 @@ class Fence() extends Plugin[Pipeline] with FenceService {
   }
 
 
-  override def isFence(stage: Stage): Bool = {
+  override def isFenceOut(stage: Stage): Bool = {
     stage.output(Data.FENCE)
+  }
+
+  override def isFenceIn(stage: Stage): Bool = {
+    stage.input(Data.FENCE)
   }
 }

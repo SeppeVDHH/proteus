@@ -445,5 +445,6 @@ trait Resettable {
 }
 
 trait FenceService {
-  def isFence(stage: Stage): Bool
+  def isFenceIn(stage: Stage): Bool
+  def isFenceOut(stage: Stage): Bool
 }

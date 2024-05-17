@@ -32,18 +32,18 @@ base_proteus = sys.argv[1]
 
 
 MODES = [
+    ("1", base_proteus, "FENCE   "),  # FENCE present
     ("0", base_proteus, "baseline"),  # baseline
-    ("1", base_proteus, "FENCE"),  # FENCE present
 ]
 
 results = {
-    '0': {
+    '1': {
         '75': 0,
         '50': 0,
         '25': 0,
         '10': 0,
     },
-    '1': {
+    '0': {
         '75': 0,
         '50': 0,
         '25': 0,
@@ -85,9 +85,10 @@ with open("benchmark_logs.txt", 'w') as logfile:
 
         for line in iter(proc['process'].stdout.readline, ''):
             logfile.write(line)
+            print(line)
             match = re.match(r"total time\s*:\[(\d+)\]", line)
             if match:
-                results[proc['mode']][proc['config']] = int(match.group(1))
+                results[proc['mode']][proc['config']] += int(match.group(1))
             else:
                 dmatch = re.match(r"^(\d+)$", line)
                 if dmatch:

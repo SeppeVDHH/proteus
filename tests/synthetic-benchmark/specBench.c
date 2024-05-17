@@ -178,7 +178,6 @@ static inline char get_byte_fence(struct bounded_array *ba, unsigned int offset)
 
 static inline int get_int_fence(struct bounded_array *ba, unsigned int offset)
 {
-    
     if (offset < ba->length)
     {
         __asm__ __volatile__("fence");
@@ -190,7 +189,6 @@ static inline int get_int_fence(struct bounded_array *ba, unsigned int offset)
 
 static inline void set_byte_fence(struct bounded_array *ba, unsigned int offset, char value)
 {
-    
     if (offset < ba->length)
     {
         __asm__ __volatile__("fence");
@@ -223,37 +221,37 @@ void base_test() {
     unsigned int index;
     int work_loop, crypto_loop;
 
-    printf("Base test\n");
+    puts("Base test\n");
 
     __attribute__((section("secret"))) static char cipher_buf[4096];
 
     if (!strcmp(input, "75"))
     {
-        printf("25s/75c\n");
+        puts("25s/75c\n");
         work_loop = 2048;
         crypto_loop = 100;
     }
     else if (!strcmp(input, "50"))
     {
-        printf("50s/50c\n");
+        puts("50s/50c\n");
         work_loop = 8192;
         crypto_loop = 100;
     }
     else if (!strcmp(input, "25"))
     {
-        printf("75s/25c\n");
+        puts("75s/25c\n");
         work_loop = 8192;
         crypto_loop = 40;
     }
     else if (!strcmp(input, "10"))
     {
-        printf("90s/10c\n");
+        puts("90s/10c\n");
         work_loop = 8192;
         crypto_loop = 15;
     }
     else
     {
-        printf("Invalid setup!\n");
+        puts("Invalid setup!\n");
         // return 1;
         work_loop = 1;
         crypto_loop = 1;
@@ -313,37 +311,37 @@ void fence_test() {
     unsigned int index;
     int work_loop, crypto_loop;
 
-    printf("Fence test\n");
+    puts("Fence test\n");
 
     __attribute__((section("secret"))) static char cipher_buf[4096];
 
     if (!strcmp(input, "75"))
     {
-        printf("25s/75c\n");
+        puts("25s/75c\n");
         work_loop = 2048;
         crypto_loop = 100;
     }
     else if (!strcmp(input, "50"))
     {
-        printf("50s/50c\n");
+        puts("50s/50c\n");
         work_loop = 8192;
         crypto_loop = 100;
     }
     else if (!strcmp(input, "25"))
     {
-        printf("75s/25c\n");
+        puts("75s/25c\n");
         work_loop = 8192;
         crypto_loop = 40;
     }
     else if (!strcmp(input, "10"))
     {
-        printf("90s/10c\n");
+        puts("90s/10c\n");
         work_loop = 8192;
         crypto_loop = 15;
     }
     else
     {
-        printf("Invalid setup!\n");
+        puts("Invalid setup!\n");
         // return 1;
         work_loop = 1;
         crypto_loop = 1;
@@ -364,6 +362,7 @@ void fence_test() {
     time_work = 0;
     time_encrypt = 0;
 
+
     for (k = 0; k < OUTER_LOOP; k++) //NEEDS TO BE 100
     {
         printf("%d\n", k);
@@ -373,7 +372,9 @@ void fence_test() {
             // do Work section
             // Speculative load based on speculative load is difficult
             // for Spectre defenses to mitigate without performance loss
+
             index = get_int_fence(&random_dat, j % 1024);
+            __asm__ __volatile__("fence");
             set_byte_fence(&plain_in, j, get_byte_fence(&plain_text_orig, index));
         }
         time2 = rdcycle() - time1;
@@ -384,12 +385,11 @@ void fence_test() {
         {
             // do Encrypt section
             Hacl_Chacha20_chacha20_encrypt((uint32_t)MESSAGE_LEN, (unsigned char *)(cipher_buf + (i * 16)), (unsigned char *)(plain_in_data + (i * 16)),
-                                           key, nonce, (uint32_t)0U);
+                                        key, nonce, (uint32_t)0U);
         }
         time2 = rdcycle() - time1;
         time_encrypt += time2;
     }
-
     // print the final execution times
     printf("work time   :[%llu]\n", time_work);
     printf("encrypt time:[%llu]\n", time_encrypt);
@@ -400,7 +400,9 @@ void fence_test() {
 
 int main(int argc, char **argv)
 {
-    printf("Mode: %d, input: %s\n", mode, input);
+    printf("Amount loops %d\n", OUTER_LOOP);
+    printf("Mode: %d ", mode);
+    printf("Input: %s\n", input);
 
     // switch between different modes, different mode means different tests
     switch (mode)
